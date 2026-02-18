@@ -1,0 +1,28 @@
+--program a pl/sql that calculates simple interest based on the given principal amount, interest rate and number of years
+set serveroutput on
+DECLARE
+    -- Declaration of variables
+    v_principal  NUMBER(10, 2) := 5000;  -- Principal amount, assigned a default value
+    v_rate       NUMBER(5, 2)  := 7.5;   -- Annual interest rate (in percentage), assigned a default value
+    v_years      NUMBER(3)     := 3;     -- Time period in years, assigned a default value
+    v_simple_interest NUMBER(10, 2); -- Variable to store the calculated simple interest
+
+BEGIN
+    -- Enable output from the PL/SQL block (must be run in a SQL client that supports DBMS_OUTPUT, like SQL*Plus or SQL Developer)
+    DBMS_OUTPUT.PUT_LINE('--- Simple Interest Calculation ---');
+    DBMS_OUTPUT.PUT_LINE('Principal Amount: ' || v_principal);
+    DBMS_OUTPUT.PUT_LINE('Interest Rate: ' || v_rate || '%');
+    DBMS_OUTPUT.PUT_LINE('Time Period (Years): ' || v_years);
+
+    -- Calculate the simple interest using the formula
+    v_simple_interest := (v_principal * v_rate * v_years) / 100;
+
+    -- Display the calculated simple interest and total amount
+    DBMS_OUTPUT.PUT_LINE('Simple Interest: ' || v_simple_interest);
+    DBMS_OUTPUT.PUT_LINE('Total Amount (Principal + Interest): ' || (v_principal + v_simple_interest));
+
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+END;
+/
