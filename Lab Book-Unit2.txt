@@ -1,0 +1,159 @@
+1. Implicit Cursor using SQL%ROWCOUNT
+
+
+--Raise the basic salary of employees working in department 10 by 10% and display a message based on the existence of records using an implicit cursor.
+
+Program
+DECLARE
+BEGIN
+   UPDATE emp
+   SET sal = sal + (sal * 0.10)
+   WHERE deptno = 10;
+
+   IF SQL%ROWCOUNT > 0 THEN
+      DBMS_OUTPUT.PUT_LINE(SQL%ROWCOUNT || ' employee(s) salary updated.');
+   ELSE
+      DBMS_OUTPUT.PUT_LINE('No employee found in department 10.');
+   END IF;
+END;
+/
+
+
+2. Explicit Cursor using %ISOPEN and %NOTFOUND
+
+
+--Raise the salary of employees in department 20 by 5% and store the updated information in the emp_update table.
+
+Table Creation
+CREATE TABLE emp_update
+(
+   empno NUMBER,
+   old_sal NUMBER,
+   new_sal NUMBER,
+   update_date DATE
+);
+
+DECLARE
+   CURSOR c_emp IS
+   SELECT empno, sal FROM emp WHERE deptno = 20;
+
+   v_empno emp.empno%TYPE;
+   v_sal emp.sal%TYPE;
+
+BEGIN
+   OPEN c_emp;
+
+   IF c_emp%ISOPEN THEN
+      LOOP
+         FETCH c_emp INTO v_empno, v_sal;
+         EXIT WHEN c_emp%NOTFOUND;
+
+         UPDATE emp
+         SET sal = sal + (sal * 0.05)
+         WHERE empno = v_empno;
+
+         INSERT INTO emp_update
+         VALUES(v_empno, v_sal, v_sal*1.05, SYSDATE);
+
+      END LOOP;
+   END IF;
+
+   CLOSE c_emp;
+END;
+/
+
+
+3. Explicit Cursor using %ROWCOUNT
+
+
+-- display the name, department and salary of the first five employees with the highest salary.
+
+
+DECLARE
+   CURSOR c_emp IS
+   SELECT ename, deptno, sal
+   FROM emp
+   ORDER BY sal DESC;
+
+   v_name emp.ename%TYPE;
+   v_dept emp.deptno%TYPE;
+   v_sal emp.sal%TYPE;
+
+BEGIN
+   OPEN c_emp;
+
+   LOOP
+      FETCH c_emp INTO v_name, v_dept, v_sal;
+
+      EXIT WHEN c_emp%ROWCOUNT > 5 OR c_emp%NOTFOUND;
+
+      DBMS_OUTPUT.PUT_LINE('Name: ' || v_name ||
+                           ' Dept: ' || v_dept ||
+                           ' Salary: ' || v_sal);
+   END LOOP;
+
+   CLOSE c_emp;
+END;
+/
+
+
+4. Cursor FOR Loop
+
+
+-- display the names and salaries of the top three highest-paid employees.
+
+
+DECLARE
+   CURSOR c_emp IS
+   SELECT ename, sal
+   FROM emp
+   ORDER BY sal DESC;
+
+   v_count NUMBER := 0;
+
+BEGIN
+   FOR rec IN c_emp LOOP
+      v_count := v_count + 1;
+
+      EXIT WHEN v_count > 3;
+
+      DBMS_OUTPUT.PUT_LINE('Name: ' || rec.ename ||
+                           ' Salary: ' || rec.sal);
+   END LOOP;
+END;
+/
+
+
+5. Parameterised Cursor
+
+
+-- display department-wise employee salary and calculate total salary of each department using a parameterised cursor.
+
+
+DECLARE
+   CURSOR emp_cur(p_dept NUMBER) IS
+   SELECT ename, sal
+   FROM emp
+   WHERE deptno = p_dept;
+
+   v_total NUMBER := 0;
+
+BEGIN
+   FOR d IN (SELECT DISTINCT deptno FROM emp)
+   LOOP
+      v_total := 0;
+
+      DBMS_OUTPUT.PUT_LINE('Department: ' || d.deptno);
+
+      FOR e IN emp_cur(d.deptno)
+      LOOP
+         DBMS_OUTPUT.PUT_LINE('Employee: ' || e.ename ||
+                              ' Salary: ' || e.sal);
+
+         v_total := v_total + e.sal;
+      END LOOP;
+
+      DBMS_OUTPUT.PUT_LINE('Total Salary = ' || v_total);
+   END LOOP;
+END;
+/
